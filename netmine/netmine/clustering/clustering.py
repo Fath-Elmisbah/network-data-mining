@@ -333,6 +333,11 @@ class SOMBasedClusetring(Clustering):
     """
     A class that performs 2-layers clustering with SOM clustering layer as the first stage
 
+    Attributes
+    ----------
+    som_labels : ndarray
+        som labels of the last dataset predicted.
+
     Methods
     -------
     fit(dataset)
@@ -350,6 +355,7 @@ class SOMBasedClusetring(Clustering):
         """
         self.som_clustering = som_clustering
         self.post_som_clustering = post_som_clustering
+        self.som_labels = None
 
     def fit(self, dataset):
         """
@@ -368,13 +374,14 @@ class SOMBasedClusetring(Clustering):
         Clusters a dataset using the 2 layers of clustering trained by fit
 
         This method overrides the base class method, and it should not be called before calling fit function
-        with a dataset with the same number of features of the dataset passed here.
+        with a dataset with the same number of features of the dataset passed here. It sets the attribute
+        som_labels according to the first part of the clustering
 
         :param ndarray dataset: the dataset to be clustered by the 2 layers of clustering.
         :return ndarray labels: an array containing the cluster labels.
         """
-        som_labels = self.som_clustering.predict(dataset)
-        som_labels_weights = self.som_clustering.centroids[som_labels]
+        self.som_labels = self.som_clustering.predict(dataset)
+        som_labels_weights = self.som_clustering.centroids[self.som_labels]
         labels = self.post_som_clustering.predict(som_labels_weights)
         return labels
 
@@ -382,14 +389,15 @@ class SOMBasedClusetring(Clustering):
         """
         Trains the 2 layers of clustering using a dataset and clusters it
 
-        This method overrides the base class method.
+        This method overrides the base class method.  It sets the attribute som_labels
+        according to the first part of the clustering
 
         :param ndarray dataset: the dataset to be clustered by the 2 layers of clustering.
         :return ndarray labels: an array containing the cluster labels.
         """
-        som_labels = self.som_clustering.fit_predict(dataset)
+        self.som_labels = self.som_clustering.fit_predict(dataset)
         self.post_som_clustering.fit(self.som_clustering.centroids)
-        som_labels_weights = self.som_clustering.centroids[som_labels]
+        som_labels_weights = self.som_clustering.centroids[self.som_labels]
         labels = self.post_som_clustering.predict(som_labels_weights)
         return labels
 
