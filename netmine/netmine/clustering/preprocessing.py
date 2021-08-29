@@ -15,14 +15,14 @@ class NanValuesHandler:
     num_rows_indices : ndarray
         a 1d ndarray containing the indices of rows that does not contain nan values. This can be used directly
         as an index of the dataset to set/get the rows not containing nan.
-    splitted_indices : ndarray
+    splitted_nan_indices : ndarray
         a 2d np array with each row containing 2 elements representing the location of one of the nan values in
         the fitted dataset.
 
     methods
     -------
     fit(dataset) : None
-        finds the locations of nan values and sets indices and splitted_indices attributes accordingly
+        finds the locations of nan values and sets indices and splitted_nan_indices attributes accordingly
     handle(dataset) :  ndarray
         handles a dataset nan values and returns the resulting dataset
     inverse_handle(dataset) : ndarray
@@ -35,24 +35,24 @@ class NanValuesHandler:
         """
         initializes object attributes
 
-        nan_rows_indices, num_rows_indices and splitted_inidces are set to None.
+        nan_rows_indices, num_rows_indices and splitted_nan_inidces are set to None.
         """
         self.nan_rows_indices = []
         self.num_rows_indices = None
-        self.splitted_indices = None
+        self.splitted_nan_indices = None
 
     def fit(self, dataset):
         """
         finds the locations of nan values
 
-        It sets nan_rows_indices, num_indices and splitted_indices attributes accordingly.
+        It sets nan_rows_indices, num_indices and splitted_nan_indices attributes accordingly.
 
         :param ndarray dataset: the dataset searched for nan values.
         """
         nan_indices = np.isnan(dataset)
         self.nan_rows_indices = np.where(nan_indices.any(axis=1))[0]
         self.num_rows_indices = np.where(~(nan_indices.any(axis=1)))[0]
-        self.splitted_indices = np.array(np.where(nan_indices)).T
+        self.splitted_nan_indices = np.array(np.where(nan_indices)).T
 
     def handle(self, dataset):
         """
@@ -290,7 +290,7 @@ class SigmoidWith10pecrentScaler(Scaler):
         :return ndarray: The scaled version of the dataset
         """
         dataset = dataset.copy()
-        dataset = self.map_values(dataset)
+        dataset = self._map_values(dataset)
         dataset = 1 / (1 + np.exp(-1 * dataset))
         return dataset
 
@@ -306,10 +306,10 @@ class SigmoidWith10pecrentScaler(Scaler):
         """
         dataset = dataset.copy()
         dataset = np.log((1 / dataset) - 1) * -1
-        dataset = self.inverse_map_values(dataset)
+        dataset = self._invere_map_values(dataset)
         return dataset
 
-    def map_values(self, x):
+    def _map_values(self, x):
         """
         Linearly maps vaues using _alpha and _beta parameters
 
@@ -318,11 +318,11 @@ class SigmoidWith10pecrentScaler(Scaler):
         """
         return (x - self._alpha) / self._beta
 
-    def inverse_map_values(self, x):
+    def _invere_map_values(self, x):
         """
-        Inversts the linear mapping made by map_values
+        Inversts the linear mapping made by_map_values
 
-        _alpha and _beta should not change between calling map_values and calling this method.
+        _alpha and _beta should not change between calling_map_values and calling this method.
 
         :param int or ndarray x: The value/values to be mapped.
         :return: A mapped version of the dataset.

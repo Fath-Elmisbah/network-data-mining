@@ -1,0 +1,22 @@
+
+0 - SOM-k-means - 15 x 15 - num of clusters : 4
+ score : 0.6539258195004949
+1 - SOM-k-means - 13 x 15 - num of clusters : 4
+ score : 0.6533517456791195
+2 - SOM-k-means - 13 x 17 - num of clusters : 4
+ score : 0.6529507361064073
+3 - SOM-k-means - 11 x 17 - num of clusters : 4
+ score : 0.6524284996325622
+4 - SOM-k-means - 9 x 17 - num of clusters : 4
+ score : 0.652178919259186
+5 - SOM-k-means - 11 x 11 - num of clusters : 4
+ score : 0.6519940875854
+6 - SOM-k-means - 11 x 15 - num of clusters : 4
+ score : 0.6515442149217561
+7 - SOM-Ward - 9 x 9 - num of clusters : 4
+ score : 0.6511915298827353
+8 - SOM-k-means - 9 x 13 - num of clusters : 4
+ score : 0.6501486004772371
+9 - SOM-Ward - 9 x 17 - num of clusters : 4
+ score : 0.6497448391342264
+

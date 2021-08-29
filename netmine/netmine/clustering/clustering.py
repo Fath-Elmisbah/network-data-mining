@@ -40,7 +40,7 @@ class Clustering:
         self.num_of_clusters = 0
 
     def __str__(self):
-        return 'name : ' + self.name + '\t' + 'number of clusters : ' + self.num_of_clusters
+        return 'name : ' + self.name + '\t' + 'number of clusters : ' + str(self.num_of_clusters)
 
     def fit(self, dataset):
         """
@@ -140,6 +140,9 @@ class SOMClustering(Clustering):
         self.som = None
         self.centroids = None
 
+    def __str__(self):
+        return 'SOM - ' + str(self.width) + ' x ' + str(self.hight)
+
     def fit(self, dataset):
         """
         Trains the SOM neural network using a dataset
@@ -151,11 +154,11 @@ class SOMClustering(Clustering):
         self.som = MiniSom(self.width, self.hight, dataset.shape[1],
                            sigma=self.sigma1, learning_rate=self.alpha1, neighborhood_function="bubble")
         self.initialize(self.som, dataset)
-        self.som.train_batch(dataset, num_iteration=self.num_of_iters1, verbose=True)
+        self.som.train_batch(dataset, num_iteration=self.num_of_iters1, verbose=False)
         self.som._learning_rate = self.alpha2
         self.som._sigma = self.sigma2
         self.som.neighborhood = self.som._gaussian
-        self.som.train_batch(dataset, num_iteration=self.num_of_iters2, verbose=True)
+        self.som.train_batch(dataset, num_iteration=self.num_of_iters2, verbose=False)
         self.centroids = self.som.get_weights().reshape((-1, dataset.shape[-1]))
 
     def predict(self, dataset):
@@ -196,7 +199,7 @@ class WardClustering(Clustering):
     fit_predict(dataset)
         trains the ward clustering object and clusters the dataset
     """
-    name = 'Ward Clustering'
+    name = 'Ward'
 
     def __init__(self, num_of_clusters = 20):
         """
@@ -207,20 +210,20 @@ class WardClustering(Clustering):
         :param int num_of_clusters: the number of clusters to be produced
         """
         self.num_of_clusters = num_of_clusters
-        self.ward_clustering = None
-        self.dataset = None
+        self._ward_clustering = None
+        self._dataset = None
 
     def fit(self, dataset):
         """
         Trains the Ward clustering object using a dataset
 
-        This method overrides the base class method. It stores the passed dataset in the attribute dataset.
+        This method overrides the base class method. It stores the passed dataset in the attribute vriable dataset. 
 
         :param ndarray dataset: the dataset used to train the Ward clustering object.
         """
-        self.ward_clustering = AgglomerativeClustering(n_clusters=self.num_of_clusters, affinity='euclidean', linkage='ward')
-        self.ward_clustering.fit(dataset)
-        self.dataset = utils.encode_2d_in_1d_array(dataset)
+        self._ward_clustering = AgglomerativeClustering(n_clusters=self.num_of_clusters, affinity='euclidean', linkage='ward')
+        self._ward_clustering.fit(dataset)
+        self._dataset = utils.encode_2d_in_1d_array(dataset)
 
     def predict(self, dataset):
         """
@@ -236,10 +239,10 @@ class WardClustering(Clustering):
         present in the dataset used in fit.
         """
         dataset = utils.encode_2d_in_1d_array(dataset).reshape((-1,1))
-        data_indices, original_indices = np.where(dataset==self.dataset)
+        data_indices, original_indices = np.where(dataset==self._dataset)
         mapped_indices = np.zeros(dataset.shape[0]) - 1
         mapped_indices[data_indices] = original_indices
-        labels = self.ward_clustering.labels_[mapped_indices.astype(int)]
+        labels = self._ward_clustering.labels_[mapped_indices.astype(int)]
         labels[np.where(mapped_indices==-1)] = -1
         return labels
 
@@ -252,9 +255,9 @@ class WardClustering(Clustering):
         :param ndarray dataset: the dataset to be clustered by the Ward clustering object.
         :return ndarray labels: an array containing the cluster labels.
         """
-        self.ward_clustering = AgglomerativeClustering(n_clusters=self.num_of_clusters, affinity='euclidean',
+        self._ward_clustering = AgglomerativeClustering(n_clusters=self.num_of_clusters, affinity='euclidean',
                                                        linkage='ward')
-        return self.ward_clustering.fit_predict(dataset)
+        return self._ward_clustering.fit_predict(dataset)
 
 
 class KmeansClustering(Clustering):
@@ -275,7 +278,7 @@ class KmeansClustering(Clustering):
     fit_predict(dataset)
         trains the k-means clustering object and clusters the dataset
     """
-
+    name = 'k-means'
     def __init__(self, num_of_clusters, num_of_iters=1000, num_of_trials=10):
         """
         initializes the object attributes
@@ -288,8 +291,8 @@ class KmeansClustering(Clustering):
         """
         self.num_of_clusters = num_of_clusters
         self.num_of_iters = num_of_iters
-        self.num_of_trial = num_of_iters
-        self.k_means_clustering = None
+        self.num_of_trials = num_of_trials
+        self._k_means_clustering = None
 
     def fit(self, dataset):
         """
@@ -299,9 +302,9 @@ class KmeansClustering(Clustering):
 
         :param ndarray dataset: The dataset used to train the k-means object.
         """
-        self.k_means_clustering = KMeans(n_clusters=self.num_of_clusters, n_init=self.num_of_trial,
+        self._k_means_clustering = KMeans(n_clusters=self.num_of_clusters, n_init=self.num_of_trials,
                                          max_iter=self.num_of_iters)
-        self.k_means_clustering.fit(dataset)
+        self._k_means_clustering.fit(dataset)
 
     def predict(self, dataset):
         """
@@ -313,7 +316,7 @@ class KmeansClustering(Clustering):
         :param ndarray dataset: the dataset to be clustered by the k-means clustering object.
         :return ndarray labels: an array containing the cluster labels.
         """
-        return self.k_means_clustering.predict(dataset)
+        return self._k_means_clustering.predict(dataset)
 
     def fit_predict(self, dataset):
         """
@@ -324,9 +327,9 @@ class KmeansClustering(Clustering):
         :param ndarray dataset: the dataset to be clustered by the k-means clustering object.
         :return ndarray labels: an array containing the cluster labels.
         """
-        self.k_means_clustering = KMeans(n_clusters=self.num_of_clusters, n_init=self.num_of_trial,
+        self._k_means_clustering = KMeans(n_clusters=self.num_of_clusters, n_init=self.num_of_trials,
                                          max_iter=self.num_of_iters)
-        return self.k_means_clustering.fit_predict(dataset)
+        return self._k_means_clustering.fit_predict(dataset)
 
 
 class SOMBasedClusetring(Clustering):
@@ -356,6 +359,11 @@ class SOMBasedClusetring(Clustering):
         self.som_clustering = som_clustering
         self.post_som_clustering = post_som_clustering
         self.som_labels = None
+        self.num_of_clusters = self.post_som_clustering.num_of_clusters
+
+    def __str__(self):
+        return 'SOM-' + self.post_som_clustering.name + ' - ' + str(self.som_clustering.width) +\
+               ' x ' + str(self.som_clustering.hight) + ' - num of clusters : ' + str(self.num_of_clusters)
 
     def fit(self, dataset):
         """

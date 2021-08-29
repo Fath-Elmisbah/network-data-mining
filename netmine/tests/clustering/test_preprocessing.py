@@ -22,7 +22,7 @@ class NanValueHandlerTestCase(unittest.TestCase):
         nan_value_handler.fit(data)
         self.assertListEqual(nan_value_handler.nan_rows_indices.tolist(),rows)
         self.assertListEqual(nan_value_handler.num_rows_indices.tolist(),rows_complement)
-        self.assertListEqual(nan_value_handler.splitted_indices.T.tolist(),[rows,columns])
+        self.assertListEqual(nan_value_handler.splitted_nan_indices.T.tolist(),[rows,columns])
 
     def test_check_fit_dataset_with_2_nans_in_a_single_row(self):
         """

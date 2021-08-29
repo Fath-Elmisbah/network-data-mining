@@ -1,9 +1,13 @@
 import numpy as np
+import pandas as pd
 
 class Optimizer:
     """
     A class that performs general optimization
 
+    todo: list should be changed to numpy
+    todo: filter and criteria have to have 2 arguments each
+    todo: add store and load to documentation
     Attributes
     ----------
     accepted_choices : list
@@ -14,7 +18,7 @@ class Optimizer:
         An 1d ndarray containing the scores of the accepted_choices in the same order
     """
 
-    def __init__(self, choices=[], filter=lambda x,y: True, criteria=lambda x,y: 0):
+    def __init__(self, choices=[], filter=lambda x,y: True, criteria=lambda x,y: 0, store=None):
         """
         :param list choices: The competing objects.
         :param function filter: A filter used to exclude some of the choices. It is a function that takes
@@ -23,9 +27,9 @@ class Optimizer:
         :param function criteria: The criteria used for optimization. It is a function that takes a choice
         with a generic parameters and gives a numeric score used for comparison.
         """
-        self.accepted_choices = np.array([])
+        self.accepted_choices = np.array([]).astype(np.object)
         self.scores = np.array([])
-        self.rejected_choices = np.array([])
+        self.rejected_choices = np.array([]).astype(np.object)
         self._choices = choices
         self._filter = filter
         self._criteria = criteria
@@ -33,8 +37,18 @@ class Optimizer:
         self._unprocessed_choices = []
         self._filter_parameters = None
         self._criteria_parameters = None
+        self._store = store
 
-    def optimize(self):
+    def from_io(self, load, filename):
+        return load(filename)
+
+    def __str__(self):
+        string = ''
+        for i,choice in enumerate(self.accepted_choices):
+            string = string + str(i) + ' : ' + str(choice) + ' ---- score : ' + str(self.scores[i]) + '\n'
+        return string
+
+    def optimize(self, store_filename=None, verbose=False):
         """
         Performs the optimization process
 
@@ -45,52 +59,26 @@ class Optimizer:
         are inserted in the sorted list according to their scores. Otherwise, this method does not do
         anything.
         """
-        if self._updated:
-            if self._unprocessed_choices == []:
-                return
-            else:
-                accpeted, rejected, scores = self._optimize(self._unprocessed_choices)
-                if rejected.shape[0] != 0:
-                    self.rejected_choices = np.concatenate(self.rejected_choices, rejected)
-                if scores.shape[0] != 0:
-                    indices = np.searchsorted(self.scores, scores)
-                    self.scores = np.insert(self.scores, indices, scores)
-                    self.accepted_choices = np.insert(self.accepted_choices, indices, accpeted)
-                self._unprocessed_choices = []
-        else:
-            self.accepted_choices, self.rejected_choices, self.scores = self._optimize(self._choices)
+        if not self._updated:
+            self._unprocessed_choices = self._choices.copy()
+            self.accepted_choices = np.array([]).astype(np.object)
+            self.rejected_choices = np.array([]).astype(np.object)
+            self.scores = np.array([])
             self._updated = True
-            self._unprocessed_choices = []
-
-    def _optimize(self, choices):
-        """
-        Performs the optimization process on a list of objects
-
-        It does not affect the member variables accepted_choices, rejected_choices and scores. This method
-        performs the entire process on the passed object rather than the member variable choices.
-        :param list choices: The list of objects to be sorted by the process
-        :return 3-tuble: accepted_choices, rejected_choices and scores. where accepted_choices represents
-        a list containing all objects that passed the filter test sorted by their scores descending. and
-        rejected_choices represents a list containing all objects that could not pass the filter test.
-        scores represents an 1d ndarray containing the scores of the accepted_choices in the same order
-        """
-        accepted_choices = []
-        scores = []
-        rejected_choices = []
-        for choice in choices:
-            print('next: \n')
+        choices_buffer = self._unprocessed_choices.copy()
+        for i,choice in enumerate(choices_buffer):
+            if verbose:
+                print(str(i) + ' : ')
             if self._filter(choice, self._filter_parameters):
-                accepted_choices.append(choice)
-                scores.append(self._criteria(choice, self._criteria_parameters))
+                score = self._criteria(choice, self._criteria_parameters)
+                i = np.searchsorted(self.scores, score)
+                self.scores = np.insert(self.scores, i, score)
+                self.accepted_choices = np.insert(self.accepted_choices, i, choice)
             else:
-                rejected_choices.append(choice)
-        scores = np.array(scores)
-        accepted_choices = np.array(accepted_choices)
-        rejected_choices = np.array(rejected_choices)
-        sorted_indices = np.argsort(scores)
-        accepted_choices = accepted_choices[sorted_indices]
-        scores = scores[sorted_indices]
-        return accepted_choices, rejected_choices, scores
+                self.rejected_choices = np.append(self.rejected_choices, choice)
+            self._unprocessed_choices.pop(0)
+            if store_filename != None:
+                self.store_self(store_filename)
 
     def set_filter(self, filter):
         """
@@ -172,3 +160,6 @@ class Optimizer:
         """
         self._filter_parameters = parameters
         self._updated = False
+
+    def store_self(self, filename):
+        self._store(self, filename)

@@ -14,7 +14,7 @@ def order_clusters(labels):
     is1d = False
     if len(labels.shape) == 1:
         is1d = True
-        labels.reshape((-1,1))
+        labels = labels.reshape((-1,1))
     nums_of_labels = np.max(labels, axis=0)
     results = np.zeros(labels.shape)
     m = np.max(nums_of_labels)
@@ -27,6 +27,6 @@ def order_clusters(labels):
         for j in range(n):
             results[np.where(labels[:,j] == indices[i,j]), j] = i
     if is1d:
-        results.flatten()
-        labels.flatten()
+        results = results.flatten()
+        labels = labels.flatten()
     return results
